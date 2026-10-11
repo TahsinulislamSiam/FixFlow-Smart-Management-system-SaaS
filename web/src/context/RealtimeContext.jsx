@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
-import { tokenStore } from '../lib/api.js';
+import { tokenStore, API_BASE } from '../lib/api.js';
 import { useAuth } from './AuthContext.jsx';
 
 /**
@@ -31,7 +31,9 @@ export function RealtimeProvider({ children }) {
     if (!token) return undefined;
 
     setStatus('connecting');
-    const socket = io({ auth: { token }, transports: ['websocket', 'polling'], reconnectionDelay: 800 });
+    // In production this connects straight to the hosted API origin; in dev an
+    // empty base lets Socket.IO use the current origin, proxied by Vite.
+    const socket = io(API_BASE || undefined, { auth: { token }, transports: ['websocket', 'polling'], reconnectionDelay: 800 });
     socketRef.current = socket;
 
     const dispatch = (event, payload) => {

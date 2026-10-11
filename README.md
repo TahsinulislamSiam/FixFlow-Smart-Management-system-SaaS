@@ -337,6 +337,62 @@ client-side routes, so the whole app runs on a single port. For a real deploymen
 | `OPENAI_MODEL` | `gpt-4o-mini` | LLM model when enabled |
 | `OPENAI_BASE_URL` | `https://api.openai.com/v1` | LLM endpoint |
 | `AI_TIMEOUT_MS` | `9000` | LLM request timeout before heuristic fallback |
+| `VITE_API_URL` | _(empty)_ | **Web client** API origin for production deploys (e.g. Netlify). Empty = same-origin/proxied. |
+
+---
+
+## 🚀 Deployment
+
+### Option A — Netlify (frontend) + separately-hosted API ✅
+
+Netlify can only host the **static** React build. The Express + SQLite API needs a Node host
+with a persistent disk (render/railway/fly/VPS), because SQLite and uploaded photos are files
+on disk and Socket.IO needs a long-lived process.
+
+**1. Deploy the API** (example: Render → *New → Web Service*)
+
+| Setting | Value |
+|---------|-------|
+| Root Directory | _(leave empty — repo root)_ |
+| Build Command | `npm install` |
+| Start Command | `npm --workspace server run start` |
+| Env `NODE_VERSION` | `22` |
+| Env `JWT_SECRET` | a long random string |
+| Env `CORS_ORIGIN` | `https://your-site.netlify.app` (your Netlify URL) |
+| Env `DB_FILE` | `/var/data/fixflow.db` |
+| Env `UPLOAD_DIR` | `/var/data/uploads` |
+
+Add a **persistent disk** mounted at `/var/data` (otherwise the database and photos are wiped on
+every deploy/restart), then seed once from the service **Shell** tab with `npm run seed`.
+Your API is now live at e.g. `https://fixflow-api.onrender.com` — verify `/api/health`.
+
+**2. Deploy the frontend on Netlify**
+
+The repo ships a `netlify.toml` that already sets the build command, publish directory, Node
+version and SPA fallback. Connect the repo and leave **Base directory empty** (Netlify UI →
+*Site configuration → Build & deploy*). Then add one environment variable:
+
+| Variable | Value |
+|----------|-------|
+| `VITE_API_URL` | `https://fixflow-api.onrender.com` (your API URL, no trailing slash) |
+
+Redeploy. The client now sends `/api` and Socket.IO traffic directly to the API host, and the
+`CORS_ORIGIN` on the API authorises the Netlify origin.
+
+> **Why this fixes the 404:** without `VITE_API_URL`, login POSTs to
+> `https://your-site.netlify.app/api/auth/login` — a path Netlify knows nothing about, so it 404s.
+
+### Option B — single Node service (skip Netlify)
+
+Because the server serves `web/dist` when it exists, you can run the whole app on one Node host:
+
+```bash
+npm run build     # build the SPA
+npm start         # API serves the SPA + API on one port
+```
+
+Deploy with build `npm run build` and start `npm --workspace server run start`, and open the
+service URL directly. No `VITE_API_URL` or CORS configuration is needed.
 
 ---
 
@@ -344,6 +400,8 @@ client-side routes, so the whole app runs on a single port. For a real deploymen
 
 - **`ExperimentalWarning: SQLite`** — expected; the app uses Node's built-in `node:sqlite`.
 - **`EADDRINUSE` on port 4000/5173** — another instance is running. Kill it, or change `PORT`.
+- **Login returns 404 after deploying to Netlify** — Netlify hosts only the static app. Deploy the
+  API separately and set `VITE_API_URL` on Netlify (see **Deployment** above).
 - **Blank page after opening a ticket** — make sure you are on the latest code and hard-refresh
   (`Ctrl+Shift+R`); a stale dev-server hot-reload can cache a broken module.
 - **No demo data** — run `npm run reset` to rebuild the database.

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { api, ApiError } from '../lib/api.js';
+import { api, ApiError, assetUrl } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useMeta } from '../context/MetaContext.jsx';
 import { useRealtime, useRefreshOn } from '../context/RealtimeContext.jsx';
@@ -591,10 +591,10 @@ export function TicketDetailPage() {
                     <button
                       key={photo.id}
                       type="button"
-                      onClick={() => setLightbox({ url: photo.url, title: photo.filename })}
+                      onClick={() => setLightbox({ url: assetUrl(photo.url), title: photo.filename })}
                       className="group relative aspect-video overflow-hidden rounded-xl border border-ink-400/18 bg-ink-925/60"
                     >
-                      <img src={photo.url} alt={photo.filename} loading="lazy" className="h-full w-full object-cover transition group-hover:scale-105" />
+                      <img src={assetUrl(photo.url)} alt={photo.filename} loading="lazy" className="h-full w-full object-cover transition group-hover:scale-105" />
                       <span className="absolute right-1.5 bottom-1.5 rounded-md bg-ink-950/70 px-1.5 py-0.5 text-[9px] text-ink-200 opacity-0 transition group-hover:opacity-100">
                         ⤢ View
                       </span>
@@ -612,10 +612,10 @@ export function TicketDetailPage() {
                     <button
                       key={photo.id}
                       type="button"
-                      onClick={() => setLightbox({ url: photo.url, title: photo.filename })}
+                      onClick={() => setLightbox({ url: assetUrl(photo.url), title: photo.filename })}
                       className="group relative aspect-video overflow-hidden rounded-xl border border-ok-400/25 bg-ink-925/60"
                     >
-                      <img src={photo.url} alt={photo.filename} loading="lazy" className="h-full w-full object-cover transition group-hover:scale-105" />
+                      <img src={assetUrl(photo.url)} alt={photo.filename} loading="lazy" className="h-full w-full object-cover transition group-hover:scale-105" />
                       <span className="absolute top-1.5 left-1.5 rounded-md bg-ok-500/85 px-1.5 py-0.5 text-[9px] font-bold text-white">Fixed</span>
                     </button>
                   ))}

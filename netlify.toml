@@ -1,0 +1,24 @@
+# ---------------------------------------------------------------------------
+# FixFlow — Netlify deployment (frontend only).
+#
+# Netlify hosts the static React build. The Express + SQLite API must be
+# deployed separately (Render / Railway / Fly / a VPS) and its public URL set
+# as the `VITE_API_URL` environment variable in the Netlify UI.
+#
+# Leave the "Base directory" setting EMPTY (repo root) so this file is used.
+# ---------------------------------------------------------------------------
+
+[build]
+  command = "npm run build"
+  publish = "web/dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# SPA fallback: every non-file route serves index.html so client-side routing
+# (e.g. refreshing /tickets/2) works. API calls are absolute (VITE_API_URL),
+# so they never land here.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

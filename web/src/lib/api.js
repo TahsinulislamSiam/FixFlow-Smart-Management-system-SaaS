@@ -7,6 +7,28 @@
 
 const TOKEN_KEY = 'fixflow.token';
 
+/**
+ * Base URL of the FixFlow API.
+ *
+ * - Local dev (`VITE_API_URL` unset): empty string, so requests go to the relative
+ *   `/api` path and Vite's dev-server proxy forwards them to `http://localhost:4000`.
+ * - Production (Netlify): set `VITE_API_URL` to the separately-hosted API origin,
+ *   e.g. `https://fixflow-api.onrender.com`, so the static frontend can reach it.
+ */
+const RAW_API_BASE = import.meta.env.VITE_API_URL ?? '';
+export const API_BASE = RAW_API_BASE.replace(/\/+$/, '');
+
+/**
+ * Resolve a server-relative asset path (e.g. `/uploads/photo.svg`) against the API
+ * origin. Absolute/data/blob URLs are returned untouched, so this is safe to use
+ * for both uploaded photos and local object-URL previews.
+ */
+export function assetUrl(url) {
+  if (!url) return url;
+  if (/^(https?:|data:|blob:)/i.test(url)) return url;
+  return `${API_BASE}${url.startsWith('/') ? url : `/${url}`}`;
+}
+
 export class ApiError extends Error {
   constructor(message, status = 0, details = null) {
     super(message);
@@ -70,7 +92,7 @@ async function request(path, { method = 'GET', body, form, query, signal, raw = 
 
   let response;
   try {
-    response = await fetch(`/api${path}${buildQuery(query)}`, { method, headers, body: payload, signal });
+    response = await fetch(`${API_BASE}/api${path}${buildQuery(query)}`, { method, headers, body: payload, signal });
   } catch (error) {
     if (error?.name === 'AbortError') throw error;
     throw new ApiError('Cannot reach the FixFlow API. Is the server running?', 0);
@@ -99,7 +121,7 @@ async function request(path, { method = 'GET', body, form, query, signal, raw = 
 
 /** Like `request`, but keeps the pagination `meta` from the server envelope. */
 async function requestWithMeta(path, { query, signal } = {}) {
-  const response = await fetch(`/api${path}${buildQuery(query)}`, {
+  const response = await fetch(`${API_BASE}/api${path}${buildQuery(query)}`, {
     headers: tokenStore.get() ? { authorization: `Bearer ${tokenStore.get()}` } : {},
     signal,
   });
