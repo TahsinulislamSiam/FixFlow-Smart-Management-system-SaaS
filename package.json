@@ -1,0 +1,28 @@
+{
+  "name": "fixflow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FixFlow — Smart Maintenance Management SaaS. Report issues, auto-assign technicians, track repairs in real time.",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "setup": "npm install && npm run seed",
+    "dev": "concurrently -n api,web -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm --workspace server run dev",
+    "dev:web": "npm --workspace web run dev",
+    "seed": "npm --workspace server run seed",
+    "reset": "npm --workspace server run reset",
+    "test": "npm --workspace server run test",
+    "build": "npm --workspace web run build",
+    "preview": "npm --workspace web run preview",
+    "start": "npm --workspace server run start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
