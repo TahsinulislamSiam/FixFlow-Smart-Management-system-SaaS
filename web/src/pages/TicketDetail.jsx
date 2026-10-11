@@ -337,7 +337,7 @@ function STA_statusLabel(status) {
 export function TicketDetailPage() {
   const { id } = useParams();
   const { user, isManager, isTechnician } = useAuth();
-  const { categoryName, categoryIcon } = useMeta();
+  const { categoryName, categoryIcon, categories } = useMeta();
   const navigate = useNavigate();
   const toast = useToast();
   const { joinTicket } = useRealtime();
@@ -383,8 +383,6 @@ export function TicketDetailPage() {
   useEffect(() => {
     load();
   }, [load, id]);
-
-  useEffect(() => load({ silent: true }), [id, load]);
 
   // Focused ticket room + auto-refresh on changes to this ticket.
   useEffect(() => joinTicket(Number(id)), [id, joinTicket]);
@@ -883,9 +881,9 @@ export function TicketDetailPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Trade">
               <Select value={editForm.category} onChange={(event) => setEditForm({ ...editForm, category: event.target.value })}>
-                {Object.keys(useCategoryOptions()).map((key) => (
-                  <option key={key} value={key}>
-                    {categoryIcon(key)} {categoryName(key)}
+                {(categories ?? []).map((category) => (
+                  <option key={category.key} value={category.key}>
+                    {categoryIcon(category.key)} {categoryName(category.key)}
                   </option>
                 ))}
               </Select>
@@ -919,7 +917,4 @@ export function TicketDetailPage() {
   );
 }
 
-function useCategoryOptions() {
-  const { categories } = useMeta();
-  return Object.fromEntries((categories ?? []).map((category) => [category.key, category.name]));
-}
+// (category options are now read from MetaContext directly in TicketDetailPage)
